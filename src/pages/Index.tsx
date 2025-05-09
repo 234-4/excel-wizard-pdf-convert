@@ -5,6 +5,7 @@ import { Upload, FileUp, FileDown, FilePlus2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUploader from "@/components/FileUploader";
 import ConversionSettings from "@/components/ConversionSettings";
+import ConversionVisualizer from "@/components/ConversionVisualizer";
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -117,6 +118,13 @@ const Index = () => {
               </div>
             </div>
           )}
+          
+          {/* Add the new visualization component */}
+          <ConversionVisualizer 
+            isConverting={isConverting}
+            file={file}
+            convertedFileUrl={convertedFileUrl}
+          />
         </div>
       </div>
     </div>
