@@ -32,13 +32,14 @@ const Index = () => {
     
     setIsConverting(true);
     setConversionError(null);
+    setConvertedFileUrl(null);
     
     try {
       // In a real implementation, you would send the file to a server or use a library
       // For this demo, we'll simulate a conversion with a timeout
       await new Promise((resolve, reject) => {
         // Simulate random error to show error handling
-        const shouldFail = Math.random() > 0.7;
+        const shouldFail = Math.random() > 0.8;
         
         setTimeout(() => {
           if (shouldFail) {
@@ -49,9 +50,48 @@ const Index = () => {
         }, 2000);
       });
       
-      // Create a fake PDF URL for demonstration purposes
-      const fakePdfUrl = URL.createObjectURL(new Blob(['PDF content'], { type: 'application/pdf' }));
-      setConvertedFileUrl(fakePdfUrl);
+      // Create a valid PDF blob
+      const pdfContent = `%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 68 >>
+stream
+BT
+/F1 24 Tf
+100 700 Td
+(Converted from Excel: ${file.name}) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000233 00000 n
+0000000301 00000 n
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+420
+%%EOF`;
+      
+      // Create a valid PDF blob with proper MIME type
+      const pdfBlob = new Blob([pdfContent], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setConvertedFileUrl(pdfUrl);
       
       toast({
         title: "Conversion complete",
@@ -69,6 +109,11 @@ const Index = () => {
     } finally {
       setIsConverting(false);
     }
+  };
+  
+  const handleRetry = () => {
+    setConversionError(null);
+    handleConvert();
   };
 
   return (
@@ -114,7 +159,12 @@ const Index = () => {
                     variant="outline" 
                     asChild
                   >
-                    <a href={convertedFileUrl} download="converted.pdf">
+                    <a 
+                      href={convertedFileUrl} 
+                      download={`${file?.name.replace(/\.[^/.]+$/, '') || 'converted'}.pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <FileDown className="mr-2" />
                       Download PDF
                     </a>
@@ -136,12 +186,12 @@ const Index = () => {
             </div>
           )}
           
-          {/* Add the new visualization component with error support */}
           <ConversionVisualizer 
             isConverting={isConverting}
             file={file}
             convertedFileUrl={convertedFileUrl}
             error={conversionError}
+            onRetry={handleRetry}
           />
         </div>
       </div>

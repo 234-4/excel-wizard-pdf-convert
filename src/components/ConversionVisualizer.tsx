@@ -9,13 +9,15 @@ interface ConversionVisualizerProps {
   file: File | null;
   convertedFileUrl: string | null;
   error?: string | null;
+  onRetry?: () => void;
 }
 
 const ConversionVisualizer = ({ 
   isConverting, 
   file, 
   convertedFileUrl,
-  error 
+  error,
+  onRetry
 }: ConversionVisualizerProps) => {
   const [progress, setProgress] = useState(0);
   
