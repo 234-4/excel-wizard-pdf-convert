@@ -11,11 +11,13 @@ const Index = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [convertedFileUrl, setConvertedFileUrl] = useState<string | null>(null);
+  const [conversionError, setConversionError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (selectedFile: File | null) => {
     setFile(selectedFile);
     setConvertedFileUrl(null);
+    setConversionError(null);
   };
   
   const handleConvert = async () => {
@@ -29,11 +31,23 @@ const Index = () => {
     }
     
     setIsConverting(true);
+    setConversionError(null);
     
     try {
       // In a real implementation, you would send the file to a server or use a library
       // For this demo, we'll simulate a conversion with a timeout
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve, reject) => {
+        // Simulate random error to show error handling
+        const shouldFail = Math.random() > 0.7;
+        
+        setTimeout(() => {
+          if (shouldFail) {
+            reject(new Error("Could not process Excel file. The file format may be unsupported or corrupted."));
+          } else {
+            resolve(true);
+          }
+        }, 2000);
+      });
       
       // Create a fake PDF URL for demonstration purposes
       const fakePdfUrl = URL.createObjectURL(new Blob(['PDF content'], { type: 'application/pdf' }));
@@ -44,9 +58,12 @@ const Index = () => {
         description: "Your Excel file has been converted to PDF",
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred during conversion";
+      setConversionError(errorMessage);
+      
       toast({
         title: "Conversion failed",
-        description: "An error occurred during conversion",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -92,7 +109,7 @@ const Index = () => {
                   )}
                 </Button>
                 
-                {convertedFileUrl && (
+                {convertedFileUrl && !conversionError && (
                   <Button 
                     variant="outline" 
                     asChild
@@ -119,11 +136,12 @@ const Index = () => {
             </div>
           )}
           
-          {/* Add the new visualization component */}
+          {/* Add the new visualization component with error support */}
           <ConversionVisualizer 
             isConverting={isConverting}
             file={file}
             convertedFileUrl={convertedFileUrl}
+            error={conversionError}
           />
         </div>
       </div>

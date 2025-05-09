@@ -1,15 +1,22 @@
 
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
-import { FileUp, FileDown, CheckCircle } from "lucide-react";
+import { FileUp, FileDown, CheckCircle, AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface ConversionVisualizerProps {
   isConverting: boolean;
   file: File | null;
   convertedFileUrl: string | null;
+  error?: string | null;
 }
 
-const ConversionVisualizer = ({ isConverting, file, convertedFileUrl }: ConversionVisualizerProps) => {
+const ConversionVisualizer = ({ 
+  isConverting, 
+  file, 
+  convertedFileUrl,
+  error 
+}: ConversionVisualizerProps) => {
   const [progress, setProgress] = useState(0);
   
   // Simulate progress when conversion is happening
@@ -35,7 +42,7 @@ const ConversionVisualizer = ({ isConverting, file, convertedFileUrl }: Conversi
   }, [isConverting, convertedFileUrl]);
   
   // Show nothing if no file is selected
-  if (!file && !isConverting && !convertedFileUrl) {
+  if (!file && !isConverting && !convertedFileUrl && !error) {
     return null;
   }
 
@@ -57,25 +64,33 @@ const ConversionVisualizer = ({ isConverting, file, convertedFileUrl }: Conversi
           <div className="mx-8 w-24 flex flex-col items-center">
             <div className="h-0.5 w-full bg-muted relative">
               <div 
-                className="h-0.5 bg-primary absolute top-0 left-0 transition-all duration-300" 
-                style={{ width: `${progress}%` }} 
+                className={`h-0.5 absolute top-0 left-0 transition-all duration-300 ${error ? 'bg-destructive' : 'bg-primary'}`}
+                style={{ width: `${error ? 100 : progress}%` }} 
               />
             </div>
             <span className="mt-2 text-xs text-muted-foreground">
-              {isConverting ? 'Converting...' : (convertedFileUrl ? 'Completed' : 'Ready')}
+              {isConverting ? 'Converting...' : (
+                error ? 'Failed' : (convertedFileUrl ? 'Completed' : 'Ready')
+              )}
             </span>
           </div>
           
           <div className="flex flex-col items-center">
-            <div className={`w-16 h-16 rounded-full ${convertedFileUrl ? 'bg-primary/10 text-primary' : 'bg-muted/30 text-muted-foreground/30'} flex items-center justify-center`}>
-              {convertedFileUrl ? <FileDown size={28} /> : <FileDown size={28} />}
+            <div className={`w-16 h-16 rounded-full ${
+              error 
+                ? 'bg-destructive/10 text-destructive' 
+                : (convertedFileUrl 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'bg-muted/30 text-muted-foreground/30')
+              } flex items-center justify-center`}>
+              {error ? <AlertCircle size={28} /> : <FileDown size={28} />}
             </div>
             <span className="mt-2 text-sm">PDF File</span>
           </div>
         </div>
         
         {/* Progress bar */}
-        {(file || isConverting) && (
+        {!error && (file || isConverting) && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Progress</span>
@@ -84,9 +99,20 @@ const ConversionVisualizer = ({ isConverting, file, convertedFileUrl }: Conversi
             <Progress value={progress} className="h-2" />
           </div>
         )}
+
+        {/* Error display */}
+        {error && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertTitle>Conversion failed</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
         
         {/* Success indicator */}
-        {convertedFileUrl && (
+        {convertedFileUrl && !error && (
           <div className="flex items-center justify-center text-primary mt-4">
             <CheckCircle className="mr-2" />
             <span>Conversion complete! Your file is ready to download.</span>
