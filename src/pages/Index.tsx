@@ -5,19 +5,16 @@ import { Upload, FileUp, FileDown, FilePlus2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FileUploader from "@/components/FileUploader";
 import ConversionSettings from "@/components/ConversionSettings";
-import ConversionVisualizer from "@/components/ConversionVisualizer";
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [convertedFileUrl, setConvertedFileUrl] = useState<string | null>(null);
-  const [conversionError, setConversionError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (selectedFile: File | null) => {
     setFile(selectedFile);
     setConvertedFileUrl(null);
-    setConversionError(null);
   };
   
   const handleConvert = async () => {
@@ -31,89 +28,29 @@ const Index = () => {
     }
     
     setIsConverting(true);
-    setConversionError(null);
-    setConvertedFileUrl(null);
     
     try {
       // In a real implementation, you would send the file to a server or use a library
       // For this demo, we'll simulate a conversion with a timeout
-      await new Promise((resolve, reject) => {
-        // Simulate random error to show error handling
-        const shouldFail = Math.random() > 0.8;
-        
-        setTimeout(() => {
-          if (shouldFail) {
-            reject(new Error("Could not process Excel file. The file format may be unsupported or corrupted."));
-          } else {
-            resolve(true);
-          }
-        }, 2000);
-      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       
-      // Create a valid PDF blob
-      const pdfContent = `%PDF-1.7
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>
-endobj
-4 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-5 0 obj
-<< /Length 68 >>
-stream
-BT
-/F1 24 Tf
-100 700 Td
-(Converted from Excel: ${file.name}) Tj
-ET
-endstream
-endobj
-xref
-0 6
-0000000000 65535 f
-0000000009 00000 n
-0000000058 00000 n
-0000000115 00000 n
-0000000233 00000 n
-0000000301 00000 n
-trailer
-<< /Size 6 /Root 1 0 R >>
-startxref
-420
-%%EOF`;
-      
-      // Create a valid PDF blob with proper MIME type
-      const pdfBlob = new Blob([pdfContent], { type: 'application/pdf' });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setConvertedFileUrl(pdfUrl);
+      // Create a fake PDF URL for demonstration purposes
+      const fakePdfUrl = URL.createObjectURL(new Blob(['PDF content'], { type: 'application/pdf' }));
+      setConvertedFileUrl(fakePdfUrl);
       
       toast({
         title: "Conversion complete",
         description: "Your Excel file has been converted to PDF",
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred during conversion";
-      setConversionError(errorMessage);
-      
       toast({
         title: "Conversion failed",
-        description: errorMessage,
+        description: "An error occurred during conversion",
         variant: "destructive",
       });
     } finally {
       setIsConverting(false);
     }
-  };
-  
-  const handleRetry = () => {
-    setConversionError(null);
-    handleConvert();
   };
 
   return (
@@ -154,17 +91,12 @@ startxref
                   )}
                 </Button>
                 
-                {convertedFileUrl && !conversionError && (
+                {convertedFileUrl && (
                   <Button 
                     variant="outline" 
                     asChild
                   >
-                    <a 
-                      href={convertedFileUrl} 
-                      download={`${file?.name.replace(/\.[^/.]+$/, '') || 'converted'}.pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                    <a href={convertedFileUrl} download="converted.pdf">
                       <FileDown className="mr-2" />
                       Download PDF
                     </a>
@@ -185,14 +117,6 @@ startxref
               </div>
             </div>
           )}
-          
-          <ConversionVisualizer 
-            isConverting={isConverting}
-            file={file}
-            convertedFileUrl={convertedFileUrl}
-            error={conversionError}
-            onRetry={handleRetry}
-          />
         </div>
       </div>
     </div>
